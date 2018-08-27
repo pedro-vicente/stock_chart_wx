@@ -1,0 +1,4 @@
+cmake .. -G "Visual Studio 14 Win64" -DCURL_INCLUDE=F:\wx\curl-7.61.0\include -DCURL_LIBRARY=F:\wx\curl-7.61.0\build_cmake\lib\Debug\libcurl-d.lib
+
+
+
