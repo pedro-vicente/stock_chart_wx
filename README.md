@@ -34,3 +34,14 @@ autoreconf -vfi && ./configure && make
 cd build
 cmake .. 
 </pre>
+
+## Data files
+
+Dow Jones Industrial Average and SP500 index for 2018
+
+DJI_2018_intermediate.txt
+
+INX_2018_intermediate.txt
+
+
+![alt text](https://user-images.githubusercontent.com/6119070/44764863-ba231f80-ab1f-11e8-9645-bef795cf36cf.png)
