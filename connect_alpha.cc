@@ -9,13 +9,19 @@
 #include <algorithm>
 #include <memory.h>
 
-#ifndef _MSC_VER
-inline
-char* strtok_s(char* s, const char* delm, char** context)
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//find_all
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void find_all(std::vector<size_t> & vec_pos, std::string buf, std::string str)
 {
-  return strtok_r(s, delm, context);
+  size_t pos = buf.find(str);
+  while (pos != std::string::npos)
+  {
+    vec_pos.push_back(pos);
+    pos = buf.find(str, pos + str.size());
+  }
 }
-#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //receive
@@ -85,45 +91,65 @@ int connect_alpha(const char *ticker, int interval, time_series series, const ch
   curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
   if (curl_easy_perform(curl_handle) == CURLE_OK)
   {
+    std::ofstream ofs("out.txt", std::ios::out | std::ios::binary);
     std::cout << chunk.size << " bytes retrieved\n";
-    char *bookmark_line;
-    char *line = strtok_s(chunk.memory, "\n", &bookmark_line);
-    line = strtok_s(NULL, "\n", &bookmark_line);
-    double *closing_quotes = NULL;
-    size_t cq_size = 0;
-    size_t ts_size = 0;
-    while (line)
+    std::string buf(chunk.memory);
+    size_t pos_buf = 0;
+    size_t nbr_lines = 0;
+    while (true)
     {
-      char *bookmark_cell;
-      char *cell = strtok_s(line, ",", &bookmark_cell);
-      size_t column = TIMESTAMP;
-      std::time_t time;
-      while (cell)
+      size_t pos_end_line = buf.find("\n", pos_buf);
+      if (pos_end_line == std::string::npos)
       {
-        if (column == TIMESTAMP)
-        {
-          ts_size++;
-          std::string str(cell);
-          struct std::tm tm;
-          std::istringstream ss(str);
-          ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-          time = mktime(&tm);
-        }
-        else if (column == CLOSE)
-        {
-          cq_size++;
-          closing_quotes = (double*)realloc(closing_quotes, cq_size * sizeof(double));
-          closing_quotes[cq_size - 1] = atof(cell);
-          std::cout << closing_quotes[cq_size - 1] << "\t";
-          time_price_t tv(time, closing_quotes[cq_size - 1], "-");
-          tp.push_back(tv);
-        }
-        column++;
-        cell = strtok_s(NULL, ",", &bookmark_cell);
+        break;
       }
-      line = strtok_s(NULL, "\n", &bookmark_line);
+      size_t len = pos_end_line - pos_buf;
+      std::string line = buf.substr(pos_buf, len);
+      std::cout << line << "\n";
+      ofs << line << "\n";
+      pos_buf = pos_end_line + 1;
+      nbr_lines++;
+      if (nbr_lines == 1)
+      {
+        continue;
+      }
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+      //find all positions for ","
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      std::vector<size_t> vec_pos;
+      find_all(vec_pos, line, ",");
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+      //get time
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      std::string cell;
+      std::time_t time;
+      len = vec_pos[TIMESTAMP];
+      cell = line.substr(0, len);
+      struct std::tm tm;
+      std::istringstream ss(cell);
+      ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+      time = mktime(&tm);
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+      //get close
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      len = vec_pos[CLOSE] - vec_pos[CLOSE - 1];
+      cell = line.substr(vec_pos[CLOSE - 1] + 1, len);
+      float close = atof(cell.c_str());
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+      //store
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      time_price_t tv(time, close, "-");
+      tp.push_back(tv);
     }
-    free(closing_quotes);
+    std::cout << nbr_lines << " lines retrieved\n";
     std::reverse(tp.begin(), tp.end());
   }
   curl_easy_cleanup(curl_handle);
