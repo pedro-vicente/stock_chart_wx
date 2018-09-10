@@ -1,5 +1,6 @@
 #include "stock_chart_wx.hh"
-#include "stock_chart.hh"
+#include "model.hh"
+#include "connect_alpha.hh"
 #include <curl/curl.h>
 #include <algorithm>
 
@@ -60,6 +61,7 @@ bool wxAppAlert::OnCmdLineParsed(wxCmdLineParser& pParser)
     dlg.ShowModal();
     exit(1);
   }
+  wxLogDebug("%s", api_key);
   return wxApp::OnCmdLineParsed(pParser);
 }
 
@@ -239,7 +241,7 @@ EVT_TOOL(WAVE_5, wxFrameMain::OnWave_5)
 wxEND_EVENT_TABLE()
 
 wxFrameMain::wxFrameMain()
-  : wxFrame(NULL, wxID_ANY, "Elliot Wave model"),
+  : wxFrame(NULL, wxID_ANY, "Chart"),
   m_interval(900), //connect, in seconds
   m_period("40d"), //connect, days "d" or years "Y"
   m_ticker(".DJI")

@@ -27,7 +27,8 @@
 #include "icons/folder.xpm"
 #include "icons/doc_blue.xpm"
 #include "grafix.hh"
-#include "stock_chart.hh"
+#include "model.hh"
+#include "connect_alpha.hh"
 
 enum
 {
