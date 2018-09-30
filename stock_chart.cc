@@ -82,6 +82,25 @@ int main(int argc, char *argv[])
   ssl.open("www.alphavantage.co");
   ssl.send(request.c_str());
   ssl.receive();
+
+  std::ifstream ifs("response.txt", std::ios::binary);
+  std::stringstream buf;
+  buf << ifs.rdbuf();
+  std::cout << buf.str();
+  std::string body;
+  size_t pos;
+  
+  pos = buf.str().find("\r\n\r\n");
+  if (pos == std::string::npos)
+  {
+    std::cout << "HTTP header bad format" << std::endl;
+  }
+  body = buf.str().substr(pos + 4);
+  std::ofstream ofs("response.csv", std::ios::out | std::ios::binary);
+  ofs.write(body.c_str(), body.size());
+  ofs.close();
+
+
   return 0;
 }
 
