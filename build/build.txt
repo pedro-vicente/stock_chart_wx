@@ -1,4 +1,2 @@
-cmake .. -G "Visual Studio 14 Win64" -DCURL_INCLUDE=F:\wx\curl-7.61.0\include -DCURL_LIBRARY=F:\wx\curl-7.61.0\build_cmake\lib\Debug\libcurl-d.lib
-
-
+cmake .. -G "Visual Studio 14 Win64" -DCURL_INCLUDE=F:\wx\curl-7.61.0\include -DCURL_LIBRARY=F:\wx\curl-7.61.0\build_cmake\lib\Debug\libcurl-d.lib -DOPENSSL_INCLUDE:PATH=F:\lib_netsockets\ssl\include -DOPENSSL_LIBRARY:FILE=F:\lib_netsockets\ssl\lib\libssl.lib -DCRYPTO_LIBRARY:FILE=F:\lib_netsockets\ssl\lib\libcrypto.lib
 

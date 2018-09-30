@@ -1,5 +1,5 @@
 #include "stock_chart.hh"
-#include <curl/curl.h>
+#include "tls_socket.hh"
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
@@ -9,7 +9,10 @@
 #include <algorithm>
 #include <memory.h>
 
-int connect_alpha(const char *ticker, int interval, time_series series, const char *api_key, std::vector<time_price_t> &tp);
+enum csv_header
+{
+  TIMESTAMP, OPEN, HIGH, LOW, CLOSE, VOLUME
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //main
@@ -37,6 +40,48 @@ int main(int argc, char *argv[])
 
   std::vector<time_price_t> tp;
   connect_alpha("^DJI", 60, TIME_SERIES_INTRADAY, api_key.c_str(), tp);
+
+  char query[127];
+  const char *outputsize = "full";
+  const char *ticker = "^DJI";
+  int interval = 60;
+  time_series series = TIME_SERIES_INTRADAY;
+  if (series == TIME_SERIES_DAILY)
+  {
+    snprintf(query, sizeof query,
+      "/query"
+      "?function=TIME_SERIES_DAILY"
+      "&symbol=%s"
+      "&outputsize=%s"
+      "&datatype=csv"
+      "&apikey=%s",
+      ticker, outputsize, api_key.c_str());
+  }
+  else if (series == TIME_SERIES_INTRADAY)
+  {
+    snprintf(query, sizeof query,
+      "/query"
+      "?function=TIME_SERIES_INTRADAY"
+      "&symbol=%s"
+      "&interval=%dmin"
+      "&datatype=csv"
+      "&apikey=%s",
+      ticker, interval, api_key.c_str());
+  }
+  else
+  {
+    assert(0);
+  }
+
+  std::string request = "GET ";
+  request += query;
+  request += " HTTP/1.1\r\nHost: www.alphavantage.co\r\nConnection: close\r\n\r\n";
+  std::cout << request << "\n";
+
+  tls_socket_t ssl;
+  ssl.open("www.alphavantage.co");
+  ssl.send(request.c_str());
+  ssl.receive();
   return 0;
 }
 
